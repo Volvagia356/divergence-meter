@@ -1,0 +1,118 @@
+<html>
+<head>
+<!--
+Contents of this file (C) 2012 Volvagia356 All Rights Reserved
+SoundManager2 (C) Schillmania.com - http://www.schillmania.com/projects/soundmanager2/
+Nixie DHTML Library (C) Cestmir Hybl - http://cestmir.freeside.sk/projects/dhtml-nixie-display/
+Nixie Tube Images and Sound Effect (C) Nitro+ - http://www.nitroplus.co.jp/game/steinsgate/
+
+Contents of this file released under the New BSD License
+For more info, visit https://github.com/Volvagia356/divergence-meter
+-->
+<!-- Rm9yIEFsaWNlCg== -->
+<!-- UPDATE 01/01/2014 SGFycmlzIDwz -->
+<title>Divergence Meter</title>
+<META name="DESCRIPTION" content="Want to figure out which world line are you on? We can help!" />
+<link rel="image_src" href="http://divergence.volzel.net/fb-image.jpg" />
+<script type="text/javascript" src="nixie.js"></script>
+<script type="text/javascript" src="soundmanager2.js"></script>
+<style type="text/css">
+body {background-color:#000; color:#fff; text-align:center; font-family:Helvetica, Arial, sans-serif, sans;}
+#divmeter {margin: 10% auto 20px; width: 434px}
+</style>
+</head>
+<body>
+<h1>Divergence Meter</h1>
+<div id="divmeter"></div>
+<input type="button" value="Mute" onclick="toggleMute()" id="btnMute" />
+<input type="button" value="Start" onclick="startMeter()" id="btnStart" />
+<p style="font-size:0.6em; color:#444;">&copy; 2012 Volvagia356 - See source for more info</p>
+<script type="text/javascript">
+//Misc. Functions
+function inArray(array,val) {
+    for (var i=0;i<array.length;i++) {
+        if (array[i] == val) {return true;}
+    }
+    return false;
+}
+//Set up Nixie display and initialize it
+nixie = new NixieDisplay();
+nixie.id='divmeter';
+nixie.charCount=8;
+nixie.urlCharsetImage='divmeter-min.png';
+nixie.charHeight=230;
+nixie.charWidth=90;
+nixie.init();
+nixie.setText('0 000000');
+//Set up SoundManager2
+var smready=false;
+soundManager.url="";
+soundManager.onready(function() {
+smready=true;
+soundManager.createSound({id:'divMeterSFX',url:'sfx.mp3',autoLoad:'true'})
+})
+//Create update function
+values=new Array(7)
+function updateNixie() {
+    for(var i=0;i<7;i++) {
+        if(inArray(numbers,i)) {
+            values[i]=(String(Math.round(Math.random()*9)));
+        }
+    }
+    value=values.join('');
+    value=value.substr(0,1)+" "+value.substr(1);
+    nixie.setText(value);
+}
+//Create stopping function
+numbers=new Array();
+function stopNumbers() {
+    if (numbers.length>0) {
+        var stopped=numbers.splice(Math.floor(Math.random()*numbers.length),1);
+        if (stopped==0) {
+            var worldline=Math.round(Math.random()*730);
+            if (worldline==356) {values[0]=2;}
+            else if (worldline==0 || worldline==730) {values[0]=1;}
+            else {values[0]=0;}
+        }
+    }
+    if (numbers.length==0) {
+        nixieTimer=clearInterval(nixieTimer);
+        stopTimer=clearInterval(stopTimer);
+        updateNixie();
+        if (!sfxplaying) {
+            document.getElementById('btnStart').disabled=false;
+        }
+    }
+}
+//Create manual restart function
+var sfxplaying=false;
+function startMeter() {
+    if (numbers.length==0 && !sfxplaying) {
+        numbers=new Array(0,1,2,3,4,5,6);
+        setTimers();
+        if (smready && !soundManager.muted) {
+            soundManager.play('divMeterSFX',{onplay: function() {sfxplaying=true;},onfinish:function() {sfxplaying=false;document.getElementById('btnStart').disabled=false;}});
+        }
+        document.getElementById('btnStart').disabled=true;
+    }
+}
+//Muting function
+function toggleMute() {
+    if (soundManager.muted) {
+        soundManager.unmute();
+        document.getElementById('btnMute').value="Mute";
+    } else {
+        soundManager.mute();
+        document.getElementById('btnMute').value="Unmute";
+    }
+}
+//Set timers
+var nixieTimer
+var stopTimer
+function setTimers() {
+    nixieTimer=setInterval("updateNixie()",50);
+    stopTimer=setInterval("stopNumbers()",500);
+}
+</script>
+</body>
+</html>
